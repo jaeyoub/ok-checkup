@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { CheckCircle2 } from "lucide-react";
@@ -21,6 +22,26 @@ const ChecklistCard = ({
   onToggle,
   onMemoChange,
 }: ChecklistCardProps) => {
+  const [localMemo, setLocalMemo] = useState(memo);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    setLocalMemo(memo);
+  }, [memo]);
+
+  const debouncedSave = useCallback(
+    (value: string) => {
+      clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => onMemoChange(id, value), 500);
+    },
+    [id, onMemoChange]
+  );
+
+  const handleMemo = (value: string) => {
+    setLocalMemo(value);
+    debouncedSave(value);
+  };
+
   return (
     <div
       className={`group rounded-lg border p-4 transition-all duration-300 ${
@@ -37,9 +58,13 @@ const ChecklistCard = ({
         />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className={`text-xs font-medium px-2 py-0.5 rounded-full transition-colors ${
-              checked ? "text-muted-foreground/60 bg-muted/30" : "text-primary/80 bg-primary/10"
-            }`}>
+            <span
+              className={`text-xs font-medium px-2 py-0.5 rounded-full transition-colors ${
+                checked
+                  ? "text-muted-foreground/60 bg-muted/30"
+                  : "text-primary/80 bg-primary/10"
+              }`}
+            >
               {category}
             </span>
             {checked && (
@@ -48,15 +73,17 @@ const ChecklistCard = ({
           </div>
           <p
             className={`font-medium transition-colors ${
-              checked ? "text-muted-foreground/50 line-through" : "text-foreground"
+              checked
+                ? "text-muted-foreground/50 line-through"
+                : "text-foreground"
             }`}
           >
             {title}
           </p>
           <Textarea
             placeholder="메모를 입력하세요..."
-            value={memo}
-            onChange={(e) => onMemoChange(id, e.target.value)}
+            value={localMemo}
+            onChange={(e) => handleMemo(e.target.value)}
             className={`mt-3 min-h-[60px] resize-none border-border/50 bg-secondary/50 text-sm placeholder:text-muted-foreground/50 focus-visible:ring-primary/30 transition-opacity ${
               checked ? "opacity-50" : ""
             }`}
