@@ -23,9 +23,9 @@ const ChecklistCard = ({
 }: ChecklistCardProps) => {
   return (
     <div
-      className={`group rounded-lg border p-4 transition-all duration-200 ${
+      className={`group rounded-lg border p-4 transition-all duration-300 ${
         checked
-          ? "border-success/30 bg-success/5"
+          ? "border-success/20 bg-success/5 opacity-60"
           : "border-border bg-card hover:border-primary/30"
       }`}
     >
@@ -37,16 +37,18 @@ const ChecklistCard = ({
         />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-medium text-primary/80 bg-primary/10 px-2 py-0.5 rounded-full">
+            <span className={`text-xs font-medium px-2 py-0.5 rounded-full transition-colors ${
+              checked ? "text-muted-foreground/60 bg-muted/30" : "text-primary/80 bg-primary/10"
+            }`}>
               {category}
             </span>
             {checked && (
-              <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
+              <CheckCircle2 className="h-4 w-4 text-success/60 shrink-0" />
             )}
           </div>
           <p
             className={`font-medium transition-colors ${
-              checked ? "text-muted-foreground line-through" : "text-foreground"
+              checked ? "text-muted-foreground/50 line-through" : "text-foreground"
             }`}
           >
             {title}
@@ -55,7 +57,9 @@ const ChecklistCard = ({
             placeholder="메모를 입력하세요..."
             value={memo}
             onChange={(e) => onMemoChange(id, e.target.value)}
-            className="mt-3 min-h-[60px] resize-none border-border/50 bg-secondary/50 text-sm placeholder:text-muted-foreground/50 focus-visible:ring-primary/30"
+            className={`mt-3 min-h-[60px] resize-none border-border/50 bg-secondary/50 text-sm placeholder:text-muted-foreground/50 focus-visible:ring-primary/30 transition-opacity ${
+              checked ? "opacity-50" : ""
+            }`}
           />
         </div>
       </div>
