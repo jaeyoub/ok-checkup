@@ -26,22 +26,11 @@ export const useChecklist = () => {
   });
 
   const updateItem = useMutation({
-    mutationFn: async ({
-      id,
-      checked,
-      memo,
-    }: {
-      id: string;
-      checked?: boolean;
-      memo?: string;
-    }) => {
+    mutationFn: async ({ id, checked, memo }: { id: string; checked?: boolean; memo?: string }) => {
       const update: { checked?: boolean; memo?: string } = {};
       if (checked !== undefined) update.checked = checked;
       if (memo !== undefined) update.memo = memo;
-      const { error } = await supabase
-        .from("checklist_items")
-        .update(update)
-        .eq("id", id);
+      const { error } = await supabase.from("checklist_items").update(update).eq("id", id);
       if (error) throw error;
     },
     onMutate: async ({ id, checked, memo }) => {
@@ -50,25 +39,42 @@ export const useChecklist = () => {
       queryClient.setQueryData<CheckItem[]>(["checklist"], (old) =>
         old?.map((item) =>
           item.id === id
-            ? {
-                ...item,
-                ...(checked !== undefined ? { checked } : {}),
-                ...(memo !== undefined ? { memo } : {}),
-              }
+            ? { ...item, ...(checked !== undefined ? { checked } : {}), ...(memo !== undefined ? { memo } : {}) }
             : item
         )
       );
       return { previous };
     },
     onError: (_err, _vars, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(["checklist"], context.previous);
-      }
+      if (context?.previous) queryClient.setQueryData(["checklist"], context.previous);
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["checklist"] });
-    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ["checklist"] }),
   });
 
-  return { items, isLoading, updateItem };
+  const addItem = useMutation({
+    mutationFn: async ({ title, category }: { title: string; category: string }) => {
+      const { error } = await supabase.from("checklist_items").insert({ title, category });
+      if (error) throw error;
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ["checklist"] }),
+  });
+
+  const deleteItem = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("checklist_items").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ["checklist"] });
+      const previous = queryClient.getQueryData<CheckItem[]>(["checklist"]);
+      queryClient.setQueryData<CheckItem[]>(["checklist"], (old) => old?.filter((item) => item.id !== id));
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(["checklist"], context.previous);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ["checklist"] }),
+  });
+
+  return { items, isLoading, updateItem, addItem, deleteItem };
 };

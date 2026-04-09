@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Trash2 } from "lucide-react";
 
 interface ChecklistCardProps {
   id: string;
@@ -11,6 +11,7 @@ interface ChecklistCardProps {
   memo: string;
   onToggle: (id: string) => void;
   onMemoChange: (id: string, memo: string) => void;
+  onDelete: (id: string) => void;
 }
 
 const ChecklistCard = ({
@@ -21,6 +22,7 @@ const ChecklistCard = ({
   memo,
   onToggle,
   onMemoChange,
+  onDelete,
 }: ChecklistCardProps) => {
   const [localMemo, setLocalMemo] = useState(memo);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
@@ -70,6 +72,13 @@ const ChecklistCard = ({
             {checked && (
               <CheckCircle2 className="h-4 w-4 text-success/60 shrink-0" />
             )}
+            <button
+              onClick={() => onDelete(id)}
+              className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+              title="삭제"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
           </div>
           <p
             className={`font-medium transition-colors ${
