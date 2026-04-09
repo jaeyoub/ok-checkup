@@ -10,6 +10,7 @@ import { useChecklist } from "@/hooks/useChecklist";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
+  // hooks must always be called in the same order
   const { user, loading: authLoading } = useAuth();
   const { items, isLoading, updateItem, addItem, deleteItem } = useChecklist();
   const [filter, setFilter] = useState<FilterType>("all");
