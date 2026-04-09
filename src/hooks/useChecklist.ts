@@ -35,7 +35,7 @@ export const useChecklist = () => {
       checked?: boolean;
       memo?: string;
     }) => {
-      const update: Record<string, unknown> = {};
+      const update: { checked?: boolean; memo?: string } = {};
       if (checked !== undefined) update.checked = checked;
       if (memo !== undefined) update.memo = memo;
       const { error } = await supabase
