@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "Bash(command -v node)",
+      "Bash(command -v npm)",
+      "Read(//usr/local/bin/**)",
+      "Read(//c/Users/user/.nvm/versions/**)",
+      "Read(//c/Program Files/nodejs/**)",
+      "Read(//c/Users/user/AppData/Roaming/**)",
+      "Read(//c/Users/user/**)",
+      "Bash(cmd.exe /c \"where node 2>nul && where npm 2>nul\")",
+      "Bash(cmd.exe /c \"where node\")",
+      "Bash(cmd.exe /c \"where npm\")",
+      "Bash(cmd.exe /c \"where bun\")",
+      "Bash(cmd.exe /c \"dir /s /b \\\\\"C:\\\\Program Files\\\\nodejs\\\\node.exe\\\\\" 2>nul\")",
+      "Bash(cmd.exe /c \"dir /s /b \\\\\"C:\\\\Users\\\\user\\\\.nvm\\\\\" 2>nul\")",
+      "Bash(cmd.exe /c \"dir \\\\\"C:\\\\Program Files\\\\\" 2>nul\")",
+      "Bash(ls -la .env*)",
+      "Bash(npm install:*)",
+      "Bash(npm --version)",
+      "Bash(export PATH=\"/c/Program Files/nodejs:$PATH\")",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)"
+    ]
+  }
+}
