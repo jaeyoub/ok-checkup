@@ -30,7 +30,7 @@ const ProgressHeader = ({ completed, total }: ProgressHeaderProps) => {
         <div className="flex items-center gap-3">
           <Progress
             value={percentage}
-            className="h-2 flex-1 bg-secondary [&>div]:bg-primary [&>div]:transition-all [&>div]:duration-500"
+            className="h-2 flex-1 bg-secondary [&>div]:bg-red-500 [&>div]:transition-all [&>div]:duration-500"
           />
           <span className="text-sm font-semibold text-primary tabular-nums whitespace-nowrap">
             {completed}/{total}
