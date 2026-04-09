@@ -19,7 +19,7 @@ const UserHeader = () => {
         </AvatarFallback>
       </Avatar>
       <span className="text-sm font-medium text-foreground truncate max-w-[120px]">
-        {name}
+        로그인중
       </span>
       <button
         onClick={signOut}
