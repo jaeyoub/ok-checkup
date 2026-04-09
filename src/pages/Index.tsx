@@ -5,12 +5,25 @@ import ProgressHeader from "@/components/ProgressHeader";
 import FilterTabs, { type FilterType } from "@/components/FilterTabs";
 import ChecklistCard from "@/components/ChecklistCard";
 import AddItemForm from "@/components/AddItemForm";
+import LoginPage from "@/components/LoginPage";
 import { useChecklist } from "@/hooks/useChecklist";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
+  const { user, loading: authLoading } = useAuth();
   const { items, isLoading, updateItem, addItem, deleteItem } = useChecklist();
   const [filter, setFilter] = useState<FilterType>("all");
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) return <LoginPage />;
 
   const toggleCollapse = (category: string) => {
     setCollapsed((prev) => {
@@ -40,9 +53,7 @@ const Index = () => {
 
   const completed = items.filter((i) => i.checked).length;
 
-  const categories = useMemo(() => {
-    return [...new Set(items.map((i) => i.category))];
-  }, [items]);
+  const categories = useMemo(() => [...new Set(items.map((i) => i.category))], [items]);
 
   const counts = useMemo(
     () => ({
@@ -80,14 +91,6 @@ const Index = () => {
     return map;
   }, [items]);
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background">
       <ProgressHeader completed={completed} total={items.length} />
@@ -98,64 +101,72 @@ const Index = () => {
         </div>
 
         <div className="space-y-6">
-          {grouped.map(([category, categoryItems]) => {
-            const stats = categoryStats.get(category)!;
-            const pct = Math.round((stats.completed / stats.total) * 100);
-            const isCollapsed = collapsed.has(category);
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : (
+            <>
+              {grouped.map(([category, categoryItems]) => {
+                const stats = categoryStats.get(category)!;
+                const pct = Math.round((stats.completed / stats.total) * 100);
+                const isCollapsed = collapsed.has(category);
 
-            return (
-              <section key={category}>
-                <button
-                  onClick={() => toggleCollapse(category)}
-                  className="flex w-full items-center gap-2 mb-3 group/header"
-                >
-                  {isCollapsed ? (
-                    <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform" />
-                  )}
-                  <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground group-hover/header:text-foreground transition-colors">
-                    {category}
-                  </h2>
-                  <div className="flex items-center gap-2 ml-auto">
-                    <Progress
-                      value={pct}
-                      className="h-1.5 w-20 bg-secondary [&>div]:bg-primary [&>div]:transition-all [&>div]:duration-500"
-                    />
-                    <span className="text-xs font-medium text-muted-foreground tabular-nums">
-                      {stats.completed}/{stats.total}
-                    </span>
-                  </div>
-                </button>
+                return (
+                  <section key={category}>
+                    <button
+                      onClick={() => toggleCollapse(category)}
+                      className="flex w-full items-center gap-2 mb-3 group/header"
+                    >
+                      {isCollapsed ? (
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      )}
+                      <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground group-hover/header:text-foreground transition-colors">
+                        {category}
+                      </h2>
+                      <div className="flex items-center gap-2 ml-auto">
+                        <Progress
+                          value={pct}
+                          className="h-1.5 w-20 bg-secondary [&>div]:bg-primary [&>div]:transition-all [&>div]:duration-500"
+                        />
+                        <span className="text-xs font-medium text-muted-foreground tabular-nums">
+                          {stats.completed}/{stats.total}
+                        </span>
+                      </div>
+                    </button>
 
-                {!isCollapsed && (
-                  <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
-                    {categoryItems.map((item) => (
-                      <ChecklistCard
-                        key={item.id}
-                        {...item}
-                        onToggle={handleToggle}
-                        onMemoChange={handleMemoChange}
-                        onDelete={handleDelete}
-                      />
-                    ))}
-                  </div>
-                )}
-              </section>
-            );
-          })}
+                    {!isCollapsed && (
+                      <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                        {categoryItems.map((item) => (
+                          <ChecklistCard
+                            key={item.id}
+                            {...item}
+                            onToggle={handleToggle}
+                            onMemoChange={handleMemoChange}
+                            onDelete={handleDelete}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </section>
+                );
+              })}
 
-          {grouped.length === 0 && (
-            <p className="py-12 text-center text-muted-foreground">
-              해당하는 항목이 없습니다.
-            </p>
+              {grouped.length === 0 && (
+                <p className="py-12 text-center text-muted-foreground">
+                  해당하는 항목이 없습니다.
+                </p>
+              )}
+
+              <AddItemForm
+                categories={categories}
+                onAdd={handleAdd}
+                isPending={addItem.isPending}
+              />
+            </>
           )}
-
-          <AddItemForm
-            categories={categories}
-            onAdd={handleAdd}
-            isPending={addItem.isPending}
-          />
         </div>
       </main>
     </div>
