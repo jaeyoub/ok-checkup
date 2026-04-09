@@ -1,29 +1,13 @@
 import { useState, useMemo } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Loader2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import ProgressHeader from "@/components/ProgressHeader";
 import FilterTabs, { type FilterType } from "@/components/FilterTabs";
 import ChecklistCard from "@/components/ChecklistCard";
-
-interface CheckItem {
-  id: string;
-  title: string;
-  category: string;
-  checked: boolean;
-  memo: string;
-}
-
-const initialItems: CheckItem[] = [
-  { id: "1", title: "고객정보 접근권한 확인", category: "월간 점검", checked: false, memo: "" },
-  { id: "2", title: "비밀번호 변경 여부", category: "월간 점검", checked: false, memo: "" },
-  { id: "3", title: "문서 보관 상태", category: "월간 점검", checked: false, memo: "" },
-  { id: "4", title: "시스템 로그 점검", category: "분기 점검", checked: false, memo: "" },
-  { id: "5", title: "외부감사 자료 준비", category: "분기 점검", checked: false, memo: "" },
-  { id: "6", title: "규정 변경사항 반영", category: "분기 점검", checked: false, memo: "" },
-];
+import { useChecklist } from "@/hooks/useChecklist";
 
 const Index = () => {
-  const [items, setItems] = useState<CheckItem[]>(initialItems);
+  const { items, isLoading, updateItem } = useChecklist();
   const [filter, setFilter] = useState<FilterType>("all");
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
@@ -37,17 +21,12 @@ const Index = () => {
   };
 
   const handleToggle = (id: string) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, checked: !item.checked } : item
-      )
-    );
+    const item = items.find((i) => i.id === id);
+    if (item) updateItem.mutate({ id, checked: !item.checked });
   };
 
   const handleMemoChange = (id: string, memo: string) => {
-    setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, memo } : item))
-    );
+    updateItem.mutate({ id, memo });
   };
 
   const completed = items.filter((i) => i.checked).length;
@@ -67,9 +46,8 @@ const Index = () => {
     return items;
   }, [items, filter]);
 
-  // Group by category
   const grouped = useMemo(() => {
-    const map = new Map<string, CheckItem[]>();
+    const map = new Map<string, typeof items>();
     filtered.forEach((item) => {
       const list = map.get(item.category) || [];
       list.push(item);
@@ -78,7 +56,6 @@ const Index = () => {
     return Array.from(map.entries());
   }, [filtered]);
 
-  // Category stats from all items (not filtered)
   const categoryStats = useMemo(() => {
     const map = new Map<string, { total: number; completed: number }>();
     items.forEach((item) => {
@@ -89,6 +66,14 @@ const Index = () => {
     });
     return map;
   }, [items]);
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
