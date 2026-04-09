@@ -4,10 +4,11 @@ import { Progress } from "@/components/ui/progress";
 import ProgressHeader from "@/components/ProgressHeader";
 import FilterTabs, { type FilterType } from "@/components/FilterTabs";
 import ChecklistCard from "@/components/ChecklistCard";
+import AddItemForm from "@/components/AddItemForm";
 import { useChecklist } from "@/hooks/useChecklist";
 
 const Index = () => {
-  const { items, isLoading, updateItem } = useChecklist();
+  const { items, isLoading, updateItem, addItem, deleteItem } = useChecklist();
   const [filter, setFilter] = useState<FilterType>("all");
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
@@ -29,7 +30,19 @@ const Index = () => {
     updateItem.mutate({ id, memo });
   };
 
+  const handleDelete = (id: string) => {
+    deleteItem.mutate(id);
+  };
+
+  const handleAdd = (title: string, category: string) => {
+    addItem.mutate({ title, category });
+  };
+
   const completed = items.filter((i) => i.checked).length;
+
+  const categories = useMemo(() => {
+    return [...new Set(items.map((i) => i.category))];
+  }, [items]);
 
   const counts = useMemo(
     () => ({
@@ -123,6 +136,7 @@ const Index = () => {
                         {...item}
                         onToggle={handleToggle}
                         onMemoChange={handleMemoChange}
+                        onDelete={handleDelete}
                       />
                     ))}
                   </div>
@@ -136,6 +150,12 @@ const Index = () => {
               해당하는 항목이 없습니다.
             </p>
           )}
+
+          <AddItemForm
+            categories={categories}
+            onAdd={handleAdd}
+            isPending={addItem.isPending}
+          />
         </div>
       </main>
     </div>
