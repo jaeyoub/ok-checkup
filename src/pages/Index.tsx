@@ -15,44 +15,7 @@ const Index = () => {
   const [filter, setFilter] = useState<FilterType>("all");
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
-  if (authLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!user) return <LoginPage />;
-
-  const toggleCollapse = (category: string) => {
-    setCollapsed((prev) => {
-      const next = new Set(prev);
-      if (next.has(category)) next.delete(category);
-      else next.add(category);
-      return next;
-    });
-  };
-
-  const handleToggle = (id: string) => {
-    const item = items.find((i) => i.id === id);
-    if (item) updateItem.mutate({ id, checked: !item.checked });
-  };
-
-  const handleMemoChange = (id: string, memo: string) => {
-    updateItem.mutate({ id, memo });
-  };
-
-  const handleDelete = (id: string) => {
-    deleteItem.mutate(id);
-  };
-
-  const handleAdd = (title: string, category: string) => {
-    addItem.mutate({ title, category });
-  };
-
   const completed = items.filter((i) => i.checked).length;
-
   const categories = useMemo(() => [...new Set(items.map((i) => i.category))], [items]);
 
   const counts = useMemo(
@@ -90,6 +53,42 @@ const Index = () => {
     });
     return map;
   }, [items]);
+
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) return <LoginPage />;
+
+  const toggleCollapse = (category: string) => {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(category)) next.delete(category);
+      else next.add(category);
+      return next;
+    });
+  };
+
+  const handleToggle = (id: string) => {
+    const item = items.find((i) => i.id === id);
+    if (item) updateItem.mutate({ id, checked: !item.checked });
+  };
+
+  const handleMemoChange = (id: string, memo: string) => {
+    updateItem.mutate({ id, memo });
+  };
+
+  const handleDelete = (id: string) => {
+    deleteItem.mutate(id);
+  };
+
+  const handleAdd = (title: string, category: string) => {
+    addItem.mutate({ title, category });
+  };
 
   return (
     <div className="min-h-screen bg-background">
