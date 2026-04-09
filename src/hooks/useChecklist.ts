@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface CheckItem {
   id: string;
@@ -12,9 +13,10 @@ export interface CheckItem {
 
 export const useChecklist = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const { data: items = [], isLoading } = useQuery({
-    queryKey: ["checklist"],
+    queryKey: ["checklist", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("checklist_items")
@@ -23,6 +25,7 @@ export const useChecklist = () => {
       if (error) throw error;
       return data as CheckItem[];
     },
+    enabled: !!user,
   });
 
   const updateItem = useMutation({
@@ -34,9 +37,10 @@ export const useChecklist = () => {
       if (error) throw error;
     },
     onMutate: async ({ id, checked, memo }) => {
-      await queryClient.cancelQueries({ queryKey: ["checklist"] });
-      const previous = queryClient.getQueryData<CheckItem[]>(["checklist"]);
-      queryClient.setQueryData<CheckItem[]>(["checklist"], (old) =>
+      const key = ["checklist", user?.id];
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<CheckItem[]>(key);
+      queryClient.setQueryData<CheckItem[]>(key, (old) =>
         old?.map((item) =>
           item.id === id
             ? { ...item, ...(checked !== undefined ? { checked } : {}), ...(memo !== undefined ? { memo } : {}) }
@@ -46,17 +50,18 @@ export const useChecklist = () => {
       return { previous };
     },
     onError: (_err, _vars, context) => {
-      if (context?.previous) queryClient.setQueryData(["checklist"], context.previous);
+      if (context?.previous) queryClient.setQueryData(["checklist", user?.id], context.previous);
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ["checklist"] }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ["checklist", user?.id] }),
   });
 
   const addItem = useMutation({
     mutationFn: async ({ title, category }: { title: string; category: string }) => {
-      const { error } = await supabase.from("checklist_items").insert({ title, category });
+      if (!user) throw new Error("Not authenticated");
+      const { error } = await supabase.from("checklist_items").insert({ title, category, user_id: user.id });
       if (error) throw error;
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ["checklist"] }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ["checklist", user?.id] }),
   });
 
   const deleteItem = useMutation({
@@ -65,15 +70,16 @@ export const useChecklist = () => {
       if (error) throw error;
     },
     onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: ["checklist"] });
-      const previous = queryClient.getQueryData<CheckItem[]>(["checklist"]);
-      queryClient.setQueryData<CheckItem[]>(["checklist"], (old) => old?.filter((item) => item.id !== id));
+      const key = ["checklist", user?.id];
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<CheckItem[]>(key);
+      queryClient.setQueryData<CheckItem[]>(key, (old) => old?.filter((item) => item.id !== id));
       return { previous };
     },
     onError: (_err, _vars, context) => {
-      if (context?.previous) queryClient.setQueryData(["checklist"], context.previous);
+      if (context?.previous) queryClient.setQueryData(["checklist", user?.id], context.previous);
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ["checklist"] }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ["checklist", user?.id] }),
   });
 
   return { items, isLoading, updateItem, addItem, deleteItem };
